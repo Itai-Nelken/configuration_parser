@@ -2,23 +2,38 @@
 #define CONFIG_H
 
 #include <stddef.h> // size_t
+#include <stdint.h>
 #include <stdbool.h>
 #include "array.h"
 
-typedef struct config_parser {
+// A view into a Literal.
+typedef struct config_value {
+    bool ok;
+    union {
+        int64_t number;
+        bool boolean;
+        char *string;
+    } as;
+} ConfigValue;
+
+typedef struct config_table {
+    char *name;
     Array pairs; // Array<Pair *>
+} ConfigTable;
+
+typedef struct config_parser {
+    Array tables; // Array<ConfigTable *>
     char *config_file_path;
 } ConfigParser;
 
 /***
- * Initialize a configuration parser.
- * NOTE: The configuration file is read and parsed.
+ * Parse a configuration file.
  *
- * @param p The ConfigParser to initialize.
+ * @param p An *uninitialized* ConfigParser.
  * @param config_file_path The path to the configuration file.
- * @return true on success, false on failure and errno is set.
+ * @return A pointer to the top-level table or NULL on failure and errno is set.
  ***/
-bool config_init(ConfigParser *p, const char *config_file_path);
+ConfigTable *config_parse(ConfigParser *p, const char *config_file_path);
 
 /***
  * Free a configuration parser.
@@ -28,12 +43,51 @@ bool config_init(ConfigParser *p, const char *config_file_path);
 void config_end(ConfigParser *p);
 
 /***
- * Get a string value using 'key' from a configuration file.
+ * Return the amount of top-level tables.
  *
  * @param p An initialized ConfigParser.
- * @param key The key to get the value from.
- * @return The value or NULL on failure and errno is set to EINVAL.
+ * @return The number of top-level tables.
  ***/
-char *config_get_string(ConfigParser *p, const char *key);
+int config_table_count(ConfigParser *p);
+
+
+/***
+ * Get a table from a parsed configuration file.
+ *
+ * @param p An initialized ConfigParser.
+ * @param name The name of the table.
+ * @return A pointer to the table or NULL on failure and errno is set to EINVAL.
+ ***/
+ConfigTable *config_get_table(ConfigParser *p, const char *name);
+
+/***
+ * Get a string value using 'key' from a table.
+ * errno is set to EINVAL if the key isn't found.
+ *
+ * @param t A ConfigTable.
+ * @param key The key to get the value from.
+ * @return The value with ok set to true on success, and false on failure.
+ ***/
+ConfigValue config_get_string(ConfigTable *t, const char *key);
+
+/***
+ * Get a number value using 'key' from a table.
+ * errno is set to EINVAL if the key isn't found.
+ *
+ * @param t A ConfigTable.
+ * @param key The key to get the value from.
+ * @return The value with ok set to true on success, and false on failure.
+ ***/
+ConfigValue config_get_number(ConfigTable *t, const char *key);
+
+/***
+ * Get a boolean value using 'key' from a table.
+ * errno is set to EINVAL if the key isn't found.
+ *
+ * @param t A ConfigTable.
+ * @param key The key to get the value from.
+ * @return The value with ok set to true on success, and false on failure.
+ ***/
+ConfigValue config_get_boolean(ConfigTable *t, const char *key);
 
 #endif // CONFIG_H

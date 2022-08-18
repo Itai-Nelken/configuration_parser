@@ -41,10 +41,23 @@ static void free_pair_callback(void *pair, void *cl) {
     free_pair(p);
 }
 
-bool config_init(ConfigParser *p, const char *config_file_path) {
+static void free_table(ConfigTable *t) {
+    arrayMap(&t->pairs, free_pair_callback, NULL);
+    arrayFree(&t->pairs);
+    free(t->name);
+    free(t);
+}
+
+static void free_table_callback(void *table, void *cl) {
+    (void)cl; // unused
+    ConfigTable *t = (ConfigTable *)table;
+    free_table(t);
+}
+
+ConfigTable *config_parse(ConfigParser *p, const char *config_file_path) {
     if(!p) {
         errno = EINVAL;
-        return false;
+        return NULL;
     }
 
     p->config_file_path = strdup(config_file_path);
@@ -52,32 +65,85 @@ bool config_init(ConfigParser *p, const char *config_file_path) {
     char *file_contents = read_file(config_file_path);
     if(!file_contents) {
         // errno is set by read_file().
-        return false;
+        return NULL;
     }
 
-    arrayInit(&p->pairs);
-
-    if(!config_parser_parse(file_contents, &p->pairs)) {
+    arrayInit(&p->tables);
+    if(!config_parser_parse(file_contents, &p->tables)) {
         free(file_contents);
-        return false;
+        arrayMap(&p->tables, free_table_callback, NULL);
+        return NULL;
     }
     free(file_contents);
-    return true;
+    // the first table is aways present and is the top-level.
+    return ARRAY_GET_AS(ConfigTable *, &p->tables, 0);
 }
 
 void config_end(ConfigParser *p) {
-    arrayMap(&p->pairs, free_pair_callback, NULL);
-    arrayFree(&p->pairs);
+    arrayMap(&p->tables, free_table_callback, NULL);
+    arrayFree(&p->tables);
     free(p->config_file_path);
 }
 
-char *config_get_string(ConfigParser *p, const char *key) {
-    for(size_t i = 0; i < p->pairs.used; ++i) {
-        Pair *pair = ARRAY_GET_AS(Pair *, &p->pairs, i);
-        if(!strcmp(pair->key, key)) {
-            return pair->value.type == LIT_STRING ? pair->value.as.string : NULL;
+
+int config_table_count(ConfigParser *p) {
+    return p->tables.used;
+}
+
+ConfigTable *config_get_table(ConfigParser *p, const char *name) {
+    for(size_t i = 0; i < p->tables.used; ++i) {
+        ConfigTable *table = ARRAY_GET_AS(ConfigTable *, &p->tables, i);
+        if(!strcmp(table->name, name)) {
+            return table;
         }
     }
     errno = EINVAL;
     return NULL;
 }
+
+#define MAKE_VALUE(ok_, type, val) ((ConfigValue){.ok = (ok_), .as = {.type = (val)}})
+ConfigValue config_get_string(ConfigTable *t, const char *key) {
+    for(size_t i = 0; i < t->pairs.used; ++i) {
+        Pair *pair = ARRAY_GET_AS(Pair *, &t->pairs, i);
+        if(!strcmp(pair->key, key)) {
+            if(pair->value.type != LIT_STRING) {
+                return MAKE_VALUE(false, number, 0);
+            } else {
+                return MAKE_VALUE(true, string, pair->value.as.string);
+            }
+        }
+    }
+    errno = EINVAL;
+    return MAKE_VALUE(false, number, 0);
+}
+
+ConfigValue config_get_number(ConfigTable *t, const char *key) {
+    for(size_t i = 0; i < t->pairs.used; ++i) {
+        Pair *pair = ARRAY_GET_AS(Pair *, &t->pairs, i);
+        if(!strcmp(pair->key, key)) {
+            if(pair->value.type != LIT_NUMBER) {
+                return MAKE_VALUE(false, number, 0);
+            } else {
+                return MAKE_VALUE(true, number, pair->value.as.number);
+            }
+        }
+    }
+    errno = EINVAL;
+    return MAKE_VALUE(false, number, 0);
+}
+
+ConfigValue config_get_boolean(ConfigTable *t, const char *key) {
+    for(size_t i = 0; i < t->pairs.used; ++i) {
+        Pair *pair = ARRAY_GET_AS(Pair *, &t->pairs, i);
+        if(!strcmp(pair->key, key)) {
+            if(pair->value.type != LIT_BOOLEAN) {
+                return MAKE_VALUE(false, number, 0);
+            } else {
+                return MAKE_VALUE(true, boolean, pair->value.as.boolean);
+            }
+        }
+    }
+    errno = EINVAL;
+    return MAKE_VALUE(false, number, 0);
+}
+#undef MAKE_VALUE
