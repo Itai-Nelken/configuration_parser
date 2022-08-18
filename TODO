@@ -1,0 +1,4 @@
+# TODO
+- [ ] make shared header actually work (problems with array.h include).
+- [ ] Add arrays and value-tables (tables as the value in a pair).
+
