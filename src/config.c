@@ -71,14 +71,13 @@ void config_end(ConfigParser *p) {
     free(p->config_file_path);
 }
 
-char *config_get_value(ConfigParser *p, const char *key) {
+char *config_get_string(ConfigParser *p, const char *key) {
     for(size_t i = 0; i < p->pairs.used; ++i) {
         Pair *pair = ARRAY_GET_AS(Pair *, &p->pairs, i);
         if(!strcmp(pair->key, key)) {
-            return pair->value.as.string;
+            return pair->value.type == LIT_STRING ? pair->value.as.string : NULL;
         }
     }
+    errno = EINVAL;
     return NULL;
 }
-
-void config_write_pair(ConfigParser *p, const char *key, const char *value);

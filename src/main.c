@@ -9,8 +9,10 @@ int main(void) {
     }
 
     char *value = NULL;
-    if((value = config_get_value(&p, "test"))) {
+    if((value = config_get_string(&p, "test"))) {
         printf("test = '%s'\n", value);
+    } else {
+        puts("Error getting 'test' key!");
     }
 
     config_end(&p);

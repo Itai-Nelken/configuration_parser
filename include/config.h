@@ -28,21 +28,12 @@ bool config_init(ConfigParser *p, const char *config_file_path);
 void config_end(ConfigParser *p);
 
 /***
- * Get a value using 'key' from a configuration file.
+ * Get a string value using 'key' from a configuration file.
  *
  * @param p An initialized ConfigParser.
  * @param key The key to get the value from.
- * @return The value or NULL on failure.
+ * @return The value or NULL on failure and errno is set to EINVAL.
  ***/
-char *config_get_value(ConfigParser *p, const char *key);
-
-/***
- * Write a key-value pair to a configuration file.
- *
- * @param p An initialized ConfigParser.
- * @oaran key The key.
- * @param value The value.
- ***/
-void config_write_pair(ConfigParser *p, const char *key, const char *value);
+char *config_get_string(ConfigParser *p, const char *key);
 
 #endif // CONFIG_H
