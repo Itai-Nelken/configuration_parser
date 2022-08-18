@@ -40,7 +40,7 @@ int main(void) {
   }
   
   // Reading top-level pairs:
-  ConfigValue val = config_get_string(conf, "is_day");
+  ConfigValue val = config_get_boolean(conf, "is_day");
   if(val.ok) {
     printf("it is %s\n", val.as.boolean ? "day" : "night");
   }
