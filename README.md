@@ -33,7 +33,7 @@ The following code will read it:
 
 int main(void) {
   ConfigParser p;
-  ConfigTable *conf = config_init(&p, "./example.config");
+  ConfigTable *conf = config_parse(&p, "./example.config");
   if(!conf) {
     // Parsing failed.
     return EXIT_FAILURE;
