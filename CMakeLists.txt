@@ -15,7 +15,10 @@ set(CONFIG_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
 )
 
-add_library(config ${CONFIG_SOURCES})
+add_library(config SHARED ${CONFIG_SOURCES})
+set_target_properties(config PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
 
-add_executable(conf src/main.c)
-target_link_libraries(conf PRIVATE config)
+install(TARGETS config
+        PUBLIC_HEADER DESTINATION include
+        LIBRARY DESTINATION lib
+)
