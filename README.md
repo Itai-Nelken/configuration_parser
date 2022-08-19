@@ -10,7 +10,10 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 make
 sudo make install
 ```
-Note that root privileges are needed to install.
+Note that root privileges are needed to install.<br>
+If you want to staticaly link the library with your project, the build produces a static library file as well.<br>
+To use it, simply compile it along with your code (e.g `cc my_code.c libconfig_static.a -I/path/to/where/config_parser.h/is`).<br>
+Note that if you use the static library, you will also need to copy the public header (`/include/config_parser.h`) to your project.
 
 ## Example
 See the [example](./example/) folder in this repository for a more complete example.
