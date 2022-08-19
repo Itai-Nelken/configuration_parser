@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "scanner.h"
-#include "config.h"
+#include "config_internal.h"
 #include "token.h"
 #include "array.h"
 #include "parser.h"

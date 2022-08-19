@@ -5,7 +5,9 @@
 #include <stdbool.h>
 #include "array.h"
 #include "parser.h"
-#include "config.h"
+#include "config_internal.h"
+
+/* helpers */
 
 // sets errno.
 // the returned buffer has to be freed (with free()).
@@ -54,6 +56,8 @@ static void free_table_callback(void *table, void *cl) {
     free_table(t);
 }
 
+/* public functions */
+
 ConfigTable *config_parse(ConfigParser *p, const char *config_file_path) {
     if(!p) {
         errno = EINVAL;
@@ -68,31 +72,36 @@ ConfigTable *config_parse(ConfigParser *p, const char *config_file_path) {
         return NULL;
     }
 
-    arrayInit(&p->tables);
-    if(!config_parser_parse(file_contents, &p->tables)) {
+    // The tables array has to be stored on the heap because as the public header
+    // doesn't include array.h but needs ConfigParser to be a complete type, Array is
+    // declared as an incomplete type and so can only be used as a pointer type.
+    p->tables = calloc(1, sizeof *p->tables);
+    arrayInit(p->tables);
+    if(!config_parser_parse(file_contents, p->tables)) {
         free(file_contents);
-        arrayMap(&p->tables, free_table_callback, NULL);
+        arrayMap(p->tables, free_table_callback, NULL);
         return NULL;
     }
     free(file_contents);
     // the first table is aways present and is the top-level.
-    return ARRAY_GET_AS(ConfigTable *, &p->tables, 0);
+    return ARRAY_GET_AS(ConfigTable *, p->tables, 0);
 }
 
 void config_end(ConfigParser *p) {
-    arrayMap(&p->tables, free_table_callback, NULL);
-    arrayFree(&p->tables);
+    arrayMap(p->tables, free_table_callback, NULL);
+    arrayFree(p->tables);
+    free(p->tables);
     free(p->config_file_path);
 }
 
 
 int config_table_count(ConfigParser *p) {
-    return p->tables.used;
+    return p->tables->used;
 }
 
 ConfigTable *config_get_table(ConfigParser *p, const char *name) {
-    for(size_t i = 0; i < p->tables.used; ++i) {
-        ConfigTable *table = ARRAY_GET_AS(ConfigTable *, &p->tables, i);
+    for(size_t i = 0; i < p->tables->used; ++i) {
+        ConfigTable *table = ARRAY_GET_AS(ConfigTable *, p->tables, i);
         if(!strcmp(table->name, name)) {
             return table;
         }

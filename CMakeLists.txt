@@ -16,7 +16,9 @@ set(CONFIG_SOURCES
 )
 
 add_library(config SHARED ${CONFIG_SOURCES})
-set_target_properties(config PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
+set_target_properties(config PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/config_parser.h")
+
+add_library(config_static STATIC ${CONFIG_SOURCES})
 
 install(TARGETS config
         PUBLIC_HEADER DESTINATION include

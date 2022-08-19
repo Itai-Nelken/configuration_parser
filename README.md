@@ -29,7 +29,7 @@ The following code will read it:
 ```c
 #include <stdio.h>
 #include <stdlib.h>
-#include "config.h"
+#include <config_parser.h>
 
 int main(void) {
   ConfigParser p;

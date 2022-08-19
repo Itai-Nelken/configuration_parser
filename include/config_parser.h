@@ -1,12 +1,18 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef _CONFIG_PARSER_H
+#define _CONFIG_PARSER_H
 
-#include <stddef.h> // size_t
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
-#include "array.h"
 
-// A view into a Literal.
+/* types */
+typedef struct array Array;
+
+typedef struct config_table ConfigTable;
+
 typedef struct config_value {
     bool ok;
     union {
@@ -16,15 +22,12 @@ typedef struct config_value {
     } as;
 } ConfigValue;
 
-typedef struct config_table {
-    char *name;
-    Array pairs; // Array<Pair *>
-} ConfigTable;
-
 typedef struct config_parser {
-    Array tables; // Array<ConfigTable *>
+    Array *tables; // Array<ConfigTable *>
     char *config_file_path;
 } ConfigParser;
+
+/* functions */
 
 /***
  * Parse a configuration file.
@@ -90,4 +93,8 @@ ConfigValue config_get_number(ConfigTable *t, const char *key);
  ***/
 ConfigValue config_get_boolean(ConfigTable *t, const char *key);
 
-#endif // CONFIG_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _CONFIG_PARSER_H
