@@ -2,19 +2,18 @@
 A configuration parser C library that parses a subset of TOML.
 
 ## Installation
-To install the library as a shared object, clone this repository and run the foolowing from its root:
+To install the library as a shared object, clone this repository and run the folowing from its root. Note that if your system uses a different folder for shared libraries (for example `/lib`), change the prefix to it (e.g for `/lib`, set the prefix to `/`).
 ```shell
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 make
 sudo make install
 ```
 Note that root privileges are needed to install.
-You can change the install prefix by passing `-DCMAKE_INSTALL_PREFIX=/path/to/somwhere` to cmake before the `..`.<br>
 
 ## Example
-See the [example](./example/) folder in this repository.
+See the [example](./example/) folder in this repository for a more complete example.
 
 ## Usage
 Assuming the following configuration file:
